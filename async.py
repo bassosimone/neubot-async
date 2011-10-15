@@ -454,7 +454,7 @@ class ProtocolSimple(asyncore.dispatcher):
     def handle_periodic(self):
         ''' Override this method in subclasses '''
 
-#PROTOCOL = SimpleProtocol
+#PROTOCOL = ProtocolSimple
 PROTOCOL = Protocol
 
 class Server(PROTOCOL):
