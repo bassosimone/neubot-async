@@ -458,47 +458,31 @@ class ProtocolSimple(asyncore.dispatcher):
 PROTOCOL = Protocol
 
 class Server(PROTOCOL):
-
-    ''' Simple echo server '''
-
-    #
-    # Usually the sender is faster than the receiver
-    # so it's advisable to limit the amount of pending
-    # data.  Which, by the way, makes the transfer
-    # speed more stable.
-    #
-
-    pending = 0
-
-    def readable(self):
-        ''' Predicate for readability '''
-        return self.pending < 4194304
-
-    def recv_complete(self, data):
-        ''' Some data has been received '''
-        self.start_send(data)
-        self.pending += len(data)
-
-    def send_complete(self, count):
-        ''' Invoked when a send operation completed '''
-        self.pending -= count
+    ''' Simple discard server '''
 
 class Client(PROTOCOL):
 
-    ''' Simple echo client '''
+    ''' Simple discard client '''
 
     buffer = b'A' * RECV_MAX
+    count = 0
+    beginning = 0
 
     def connection_ready(self):
         ''' The connection has been established '''
+        self.beginning = ticks()
         self.start_send(self.buffer)
 
-    def recv_complete(self, data):
-        ''' Some data has been received '''
+    def send_complete(self, count):
+        ''' Some data has been sent succesfully '''
+        self.count += count
         self.start_send(self.buffer)
 
     def handle_periodic(self):
         ''' Invoked periodically '''
+        elapsed = ticks() - self.beginning
+        speed = (self.count/(1000 * 1000 * 1000.0))/elapsed
+        sys.stdout.write('Speed: %f GByte/s\n' % speed)
         self.close()
 
 def main(args):
